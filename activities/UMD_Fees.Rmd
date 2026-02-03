@@ -28,12 +28,17 @@ umd_fees_pct <- umd_fees |> mutate(pct_change = (`Fall 2024`- `Fall 2021`)/`Fall
 ```
 
 
+```{r}
+umd_fees_pct_2524 <- umd_fees |> mutate(pct_change = (`Fall 2025`- `Fall 2024`)/`Fall 2024` * 100)
+```
+
+
 
 ### Task 4: Describe our results
 
 Write a few sentences about what you found in the data. What's the story here?
 
-
+### Over the last four years, the student sustainability and student counseling service fees have dramaticlly increased. The shuttle bus fees have significantly increased as well. In the past year, student activity fees have increased more than any other. The story here could potentially examine where the money of any one of these fees goes, and whether or not students/faculty are satisfied with these changes. Out of all of these, I'm most curious about the student counseling center because I'm curious what students think about it (I know I certainly have my opinions...)
 
 
 
