@@ -37,6 +37,7 @@ team_aces |> mutate(percentile = ntile(total_aces, 100))
 
 Write a couple of sentences that puts Maryland into context with the other teams in the dataset. You can do some Internet research to help with this.
 
+Of all of the college volleyball teams in this list, 95% of their aces fall below Maryland's. Only 5% of teams can score more service aces than Maryland. This doesn't necessarily mean that Maryland is the "best" team. It means that Maryland has one of the best rates in the country for points scored immediately following a serve where the opponent doesn't even touch the ball. 
 
 
 When you are done, save your work, switch to GitHub Desktop, then add, commit and push your changes to GitHub and submit the URL of the notebook in ELMS.
