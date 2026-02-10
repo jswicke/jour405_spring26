@@ -28,7 +28,8 @@ crimes <- read_csv("https://raw.githubusercontent.com/dwillis/jour405/refs/heads
 ### Task 4: Calculate the total crime rate for each year (picking our unit!)
 
 ```{r}
-crimes |> mutate(total_rate = grand_total/population * 10000)
+crimes |> mutate(total_rate = grand_total/population * 10000) |>
+  arrange((total_rate))
 ```
 
 
@@ -44,6 +45,8 @@ crimes_with_rates <- crimes |> mutate(violent_rate = violent_crime_total/populat
 ### Task 6: Describe our results
 
 Write a few sentences about what you found in the data. What years had the highest crime rates? What years had the lowest crime rates? Does the pattern match your expectations?
+
+The highest crime rates were in 1980, 1981, and 1979. The lowest were in 2020, 2019, and 2018. Given a general downward trend in crime, I wasn't too surprised. 2020 especially made sense for the lowest rate because of COVID-19. The order is essentially arranged by year, with a few noticeable spikes in the early 80s. 
 
 
 
