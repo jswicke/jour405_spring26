@@ -1,6 +1,6 @@
 ---
 title: "Baltimore County 911 Overdose Calls Analysis"
-author: "YOUR NAME HERE"
+author: "Joe Wicke"
 ---
 
 ```{r setup, include=FALSE}
@@ -74,7 +74,7 @@ summary(daily_calls$call_count)
 
 Let's visualize the time series of daily calls. What patterns do you see? If you had to draw horizontal lines that would highlight unusual days, where would those lines be?
 
-ANSWER HERE
+There's a plummet of 911 calls in a cluster between October 2022 and January 2023. I'm curious why it dips so dramatically. I'm also curious about the outliers, particularly the very few calls just before July 2022 and right after January 2023. 
 
 ```{r daily-calls-plot}
 # Plot daily call volume
