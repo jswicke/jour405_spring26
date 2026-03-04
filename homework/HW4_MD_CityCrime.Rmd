@@ -73,3 +73,16 @@ Throughout Maryland, crime rates generally went down from 2019 to 2020. But some
 ### Task 9: Save Your Work and Put it on GitHub
 
 Save this notebook, then commit it to your local repository. Push the changes to your GitHub repository and submit the URL for this file in ELMS.
+
+### Task 10
+
+```{r}
+md_cities_percentiles <- md_cities_change |>
+  mutate(violent_percentile = ntile(violent_rate_2020, 100))
+
+md_cities_percentiles |>
+  summarise (IQR = IQR(violent_rate_2020))
+  
+```
+
+***These results help reinforce my story idea. For example, Edmonston is in the 87th percentile for violent crime. Another city in PG County, Seat Pleasant, is in the 93rd percentile. These are abnormally high, and can help complement the idea that some cities are seeing skyrocketing crime rates.***
