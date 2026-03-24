@@ -75,7 +75,7 @@ ggplot(accidents, aes(x = date, y = total)) +
 ### Task 1 (3 points)
 Looking at the time series visualization above, identify at least two noticeable patterns or anomalies. What questions would you want to investigate further based on this initial view of the data? How might these visual patterns translate into potential story angles?
 
-ANSWER HERE
+The first anomaly I noticed is the abnormally low amount of accidents right before 2022. A little before that, accidents skyrocketed to its highest rate ever. There was also a dip in 2020, though that can easily be expalined by the pandemic. I think an interesting story angle could be why there were so many accidents and then so few in that stretch of 2022. Was this just a coincidence, or did something happen within this time period that warranted such polarizing numbers?
 
 The daily data is quite noisy, so let's also look at weekly patterns:
 
