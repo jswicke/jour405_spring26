@@ -192,13 +192,17 @@ Based on everything you've calculated, answer the following:
 1.  Write a headline and a one-paragraph lede about car thefts in Prince
     George's County. Your text should properly reflect the uncertainty
     in the data --- don't overstate or understate what the numbers show.
+    
+Headline: Prince George's County averages 375 car thefts, new study finds
+
+Lede: Prince George's County has reached an average of approximately 375 car thefts per month, new data suggests. The research spans from 2024 to 2026. But this average could be potentially as high as 405 thefts per month and as low as 345 thefts, due to uncertainty in the polling. 
 
 2.  Your editor says "Just tell me if car thefts are going up or down."
     Using only the confidence interval (no significance testing yet),
     what's the most accurate answer you can give? What would you need to
     do next to answer that question more definitively?
 
-PUT ANSWERS HERE
+The most accurate answer is that while it may look like car thefts have decreased, there is insufficient data to suggest that this change was significant. Next, you would need to find out the data's p-value to determine how significant the decrease was.
 
 When you are finished, save your work, switch to GitHub Desktop, then
 add, commit and push your changes to GitHub and submit the URL of the
