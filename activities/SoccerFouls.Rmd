@@ -49,5 +49,21 @@ matches |>
 
 ### Task 6: Describe the results of both the correlation calculation and the scatterplot.
 
+The results are incredibly scattered. The line of best fit does not really reflect the shape of the plots. Based off all of this, I would say there's no correlation.
+
+
+
+
+
+### Task 7: Choose another variable and repeat the steps in Tasks 4-5. Describe the results. ***The results are once again very scattered, but seem to have a very loose negative correlation. This suggests that teams who are up more points correlate with getting less yellow cards.***
+
+```{r}
+matches |> summarize(correlation = cor(yellow_cards, goal_diff, method="pearson"))
+
+matches |> 
+  ggplot() +
+  geom_point(aes(x=goal_diff, y=yellow_cards)) +
+  geom_smooth(aes(x=goal_diff, y=yellow_cards), method="lm")
+```
 
 When you are done, save your work, switch to GitHub Desktop, then add, commit and push your changes to GitHub and submit the URL of the notebook in ELMS.
