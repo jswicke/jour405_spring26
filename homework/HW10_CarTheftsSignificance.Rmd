@@ -1,6 +1,6 @@
 ---
 title: "Car Thefts Significance"
-name: REPLACE WITH YOUR NAME
+name: Joe Wicke
 ---
 
 Your editor wants to know if there have been recent changes in the number of car thefts in Prince George's County. Using monthly figures and significance testing, you'll come up with an answer and decide whether there's a story here. As with the previous homework, provide answers in this notebook when prompted and you will have to fill in values where you see REPLACE_ME. Get started by loading the tidyverse in a new R block.
@@ -9,7 +9,7 @@ Your editor wants to know if there have been recent changes in the number of car
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-# LOAD THE TIDYVERSE
+library(tidyverse)
 ```
 
 
@@ -30,7 +30,7 @@ glimpse(car_thefts)
 
 We'll make a line chart using geom_line() to try and illustrate any trend over time. What's your initial reaction to the change in car thefts? Is there a trend?
 
-PUT ANSWERS HERE
+My initial reaction is that it seems like there is overall a downward trend for car thefts starting from 2024. While there is a brief spike in 2025, the overall trend still leans downward. 
 
 ```{r}
 
@@ -61,7 +61,7 @@ Let's add some stats to that process - mean and standard deviation - and calcula
 theft_summary <- car_thefts |> 
   summarize(
     mean_thefts = mean(total),
-    sd_thefts = sd(REPLACE_ME),
+    sd_thefts = sd(total),
     months = n(),
     se_thefts = sd_thefts / sqrt(months),
     margin_error = qt(0.975, df = months - 1) * se_thefts,  # Using t-distribution for small sample
@@ -80,7 +80,7 @@ theft_summary
 
 Let's make a better chart showing the changes and the statistics we produced in Task 4. Does this change anything about your answer from Task 3?
 
-
+Right now, it seems to suggest that the overall average car thefts is higher than expected. Given that the mean is so far up the graph, it suggests that the car rates aren't as low as the figure makes it seem. I expected it to align much closer with the 2026 rates. 
 
 ```{r}
 # Make a better chart
@@ -110,7 +110,7 @@ ggplot(aes(x = month, y = total)) +
 - What figure(s) accurately reflects the number of car thefts in a typical month?
 - Propose a headline about the trend in car thefts that is focused on the present and future, but informed by the data you see above.
 
-PUT YOUR ANSWERS HERE.
+The 95% confidence interval shows the range of rates that the "real" mean is located in. This means that anything in the shaded red line could potentially be the "real" average number of cars stolen per onth. A headline that reflects this is "Car thefts down in 2026, but monthly average stays high"
 
 
 ### Task 7: Is the recent trend significant?
@@ -138,11 +138,11 @@ t_test_periods
 period_summary <- car_thefts |> 
   group_by(period) |> 
   summarize(
-    mean_thefts = mean(REPLACE_ME),
+    mean_thefts = mean(total),
     sd_thefts = sd(total),
     months = n(),
     se_thefts = sd_thefts / sqrt(months),
-    margin_error = qt(0.975, df = REPLACE_ME - 1) * se_thefts, # look at how we calculated this above
+    margin_error = qt(0.975, df = total - 1) * se_thefts, # look at how we calculated this above
     ci_lower = mean_thefts - margin_error,
     ci_upper = mean_thefts + margin_error
   )
@@ -170,7 +170,7 @@ Given the above chart, is the difference between the two periods statistically s
 
 How would you revise your headline from Task 6, if at all? What would you tell your editor, and what would you expect her to ask you?
 
-PUT ANSWERS HERE
+The difference between the two periods is statistically significant. However, it's important to distinguish the difference between statistical significance and practical significance. Just because there is a statistical significance does not necessarily mean that the measured change looks significant to a bystander. We can reject the null hypothesis. However, I would not necessarily revise my headline, because I think it accurately reflects that while the average for car thefts has in fact gone down, it's not as practically significant as the data suggests. 
 
 
 
