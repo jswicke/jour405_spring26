@@ -114,7 +114,7 @@ ggplot(accidents, aes(x = day_of_week, y = total)) +
 ### Task 2 (2 points)
 Based on the day-of-week analysis, which day(s) have the highest and lowest average accidents? Why might these patterns exist?
 
-ANSWER HERE
+Based on this analysis, Wednesdays have the lowest average accidents and Fridays have the highest average accidents. These patterns might exist because of driver fatigue. Speaking from personal experience, I think you always start the week motivated and gradually lose it. You can apply the same logic to driving. By Friday, you're exhausted from the work week and likely rushing home to either relax or prepare for late-night plans, so drivers may generally be less focused. I'm not entirely sure why Wednesday specifically has the lowest average, but given it is only 0.04 away from Monday, I think my theory still stands true, as that's still generally considered the beginning of the week. 
 
 ## Calculating Z-Scores
 
@@ -161,7 +161,7 @@ unusual_days |>
 ### Task 3 (3 points)
 Choose one of the top 10 unusual days and research what might have happened on that date. Look for weather events, holidays, major incidents, or other factors that could explain the unusual number of accidents. Briefly describe your findings and how you would incorporate this context into a story.
 
-ANSWER HERE
+There were abnormally high accidents on July 23rd, 2021. After doing some research, I found there was a fatal pedestrian crash that day. Importantly, Baltimore avenue was closed for approximately 2 1/2 hours. This was early in the morning (2:30 am to 5 am). While I'm unsure if this was the sole factor, I think that having a major county road closed during a time where drivers may be especially distracted, on top of a fatal crash already occuring, may have skewed the car accidents total higher than it would normally be. 
 
 Let's visualize these unusual days:
 
@@ -210,7 +210,7 @@ unusual_dow |>
 ### Task 4 (3 points)
 Compare the days that have extreme z-scores overall versus those with extreme day-of-week z-scores. How do these lists differ? What journalistic insights can you draw from comparing these two different approaches to measuring "unusual" days?
 
-ANSWER HERE
+What I find interesting is that a lot of the days with the highest numbers of crashes come towards the end of the week (Thursday, Friday, Saturday). Conversely, the two with abnormally low z-scores occur during the beginning of the week (while some debate whether Sunday is the very end or very beginning, for my sake I'll count it towards the beginning. The other is Monday, so there's no debate there). A journalist might ask this question: do more accidents occur during the end of the week?
 
 Let's see how many unusual days we have for each day of the week:
 
@@ -289,7 +289,7 @@ unusual_monthly |>
 ### Task 5 (2 points)
 Based on the monthly pattern analysis, which months have the highest and lowest average accidents? Develop a hypothesis about why these seasonal patterns exist.
 
-ANSWER HERE
+January has the lowest number of accidents while October has the highest. I would actually blame it on road conditions over any holidays or events. In fact, I'm going to take a little bit of a hail mary and say it's because of leaves. My hypothesis is that accidents occur most in the fall months because of road conditions related to falling leaves. I believe that wet leaves cause slicker roads, which can lead to more accidents. The reason it's so high in December and so low in January, among other factors, is because of the Winter solstice, and most leaves are off the road by then. 
 
 ## Identifying Extreme Outliers
 
@@ -314,9 +314,15 @@ if(nrow(extreme_outliers) > 0) {
 ### Task 6 (2 points)
 For the extreme outliers identified (z-scores beyond ±3), what do they have in common?
 
-ANSWER HERE
+All but one of the outliers happened during the weekend or on Friday, which is closely associated with the weekend anyway. 
 
 ## Your Best Story Pitch
 
 ### Task 7 (5 points)
 Based on all the analyses performed, craft your best story pitch, including a headline and lede. Be sure to include what kinds of sources/people you'd talk to for the story.
+
+Based on everything I had, I would like to write a story on road conditions during fall months. I feel like most people assume that summer has the highest volume of accidents, so it may be interesting to take a different approach and examine why the numbers spike so high during the fall. I would talk to city officials from the department of transportation, conduct MOS interviews, maybe find someone who was in an accident during the fall, and talk to whichever PG city councilmen has the most expertise on transportation. 
+
+Headline: "Çar accidents spike during fall months, study finds"
+
+Lede: "Leaves fall, but vehicular accidents rise as Prince George's County enters its fall season. A new study by [organization] found that the September, October, November and December are among the highest average rates for car accidents across the year."
