@@ -326,3 +326,6 @@ Based on everything I had, I would like to write a story on road conditions duri
 Headline: "Çar accidents spike during fall months, study finds"
 
 Lede: "Leaves fall, but vehicular accidents rise as Prince George's County enters its fall season. A new study by [organization] found that the September, October, November and December are among the highest average rates for car accidents across the year."
+
+
+The `pnorm()` estimate and the actual proportion won't match perfectly — `pnorm()` assumes a normal distribution, and real data is never perfectly normal. But they should be in the same ballpark, and the comparison helps us see how well the normal model fits.

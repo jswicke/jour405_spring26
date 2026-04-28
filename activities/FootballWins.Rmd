@@ -9,7 +9,7 @@ Multiple regression analysis is a statistical method used to understand the rela
 
 ```{r setup}
 library(tidyverse)
-#install.packages('corrplot')
+install.packages('corrplot')
 library(corrplot)
 ```
 
@@ -26,7 +26,7 @@ teams <- read_csv("https://raw.githubusercontent.com/dwillis/jour405_files/main/
 Next, we construct a linear model to analyze how different factors like `Yards Gained`, `Takeaways`, and `Points Scored` influence the number of wins. This model helps us quantify the relationships and assess which factors are significant predictors of success.
 
 ```{r}
-model <- lm(Wins ~ `Yards Gained` + Takeaways + `Points Scored`, data = teams)
+model <- lm(Wins ~ Giveaways + Takeaways + `Yards Allowed` + `Points Scored`, data = teams)
 summary(model)
 ```
 
@@ -54,14 +54,14 @@ The coefficients tell us the estimated effect of each independent variable on th
 
 Is this a useful model, based on what you've seen? Why?
 
-ANSWER HERE
+The model is useful, but it should be acknowledged that there are significant flaws in its data collection. With a min-max of 4 games and a P-squared value of 58%, it's clear that there could be sizable gaps in the data that the model cannot account for. With this in mind, it's still useful as a baseline, but it has its limitations. 
 
 ## Correlation Analysis
 
 After building the model, we calculate the correlation matrix for our variables of interest. This matrix helps visualize the strength and direction of the relationships between each pair of variables.
 
 ```{r}
-selected_vars <- teams |>  select(`Yards Gained`, Takeaways, `Points Scored`, Wins)
+selected_vars <- teams |>  select(`Yards Allowed`, Takeaways, Giveaways, `Points Scored`, Wins)
 cor(selected_vars)
 ```
 
@@ -80,8 +80,10 @@ The results from our correlation analysis show the strength of the relationships
 
 Which of these three factors - Yards Gained, Takeaways and Points Scored - have the most impact on wins? Are there any that do not seem impactful at all?
 
-ANSWER HERE
+After readjusting the model I found that "yards gained" actually dilutes the data quite a bit, and its inclusion significantly lowers the adjusted r-squared. I wish I knew enough about football to say why, but I'd assume it's because scoring yards doesn't necessarily give you a win since the other team can just score more points than you if your defense sucks. Conversely, yards allowed makes a major difference, given its significant spike in adjusted r-squared and its large coefficient in the correlation matrix. Points scored obviously is a major factor too. Takeaways and giveaways only slightly adjust the model and only slightly affect wins. 
 
 ## Using the Model (3 points)
 
 Without using the words "multiple regression model", describe how you could use this model to cover a team or game.
+
+You can use this model to predict if a team will win or lose based on the stats used in this example. 
