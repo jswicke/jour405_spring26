@@ -13,6 +13,14 @@ library(tidyverse)
 library(lubridate)
 ```
 
+Tests I can run:
+
+- Percent change of burglaries for each year
+- Rate per 10,000 people 
+- IQR of burglaries
+- Comparing CIs for each college's burglary rates
+- Calculating effect size using cohen's D
+
 ***Data exploration: My data covers a wide variety of campus crime from 2016-2023. While the original files had every college in the United States represented, I instead filtered it down to 11 colleges --- the University of Maryland and the ten schools with the largest student bodies in the B1G. Since I do think it would be too broad to just look at general crime trends, I decided to land on burglary, since it's a highly-represented stat across all files. While the data is all-encompassing and easily accessible, the one limitation is a lack of precision in the data. While each year is handily represented, the exact months are not. While it's not impossible to visualize, the data will unfortunately be less detailed in something like a line graph. I initially feared that having 5 separate datasets would make it difficult to analyze the data, I binded the rows together, and thankfully all the data remained. What was nice too was that certain years overlapped in individual datasets, which is now avoided thanks to the combined dataset, which makes everything a little less tricky. For my sakes, anything labeled "BURGLA" will be mainly what I'm looking at. To make my life a little easier, I may make a condensed dataset of just BURGLA and university values. One final issue that may come up is that even in only one campus, many colleges are subdivided by region. I may have to use summarize and sum to get around this (possibly mutate, though that may cause more confusion)***
 
 ```{r}
