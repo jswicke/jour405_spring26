@@ -1,0 +1,27 @@
+---
+title: "final_project"
+output: html_document
+date: "2026-05-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+***Data exploration: My data covers a wide variety of campus crime from 2016-2023. While the original files had every college in the United States represented, I instead filtered it down to 11 colleges --- the University of Maryland and the ten schools with the largest student bodies in the B1G. Since I do think it would be too broad to just look at general crime trends, I decided to land on burglary, since it's a highly-represented stat across all files. While the data is all-encompassing and easily accessible, the one limitation is a lack of precision in the data. While each year is handily represented, the exact months are not. While it's not impossible to visualize, the data will unfortunately be less detailed in something like a line graph. I initially feared that having 5 separate datasets would make it difficult to analyze the data, I binded the rows together, and thankfully all the data remained. What was nice too was that certain years overlapped in individual datasets, which is now avoided thanks to the combined dataset, which makes everything a little less tricky. For my sakes, anything labeled "BURGLA" will be mainly what I'm looking at. To make my life a little easier, I may make a condensed dataset of just BURGLA and university values. One final issue that may come up is that even in only one campus, many colleges are subdivided by region. I may have to use summarize and sum to get around this (possibly mutate, though that may cause more confusion)***
+
+```{r}
+campus_crime_2019 <- read_csv("oncampuscrime2019.csv")
+campus_crime_2020 <- read_csv("oncampuscrime2020.csv")
+campus_crime_2021 <- read_csv("oncampuscrime2021.csv")
+campus_crime_2022 <- read_csv("oncampuscrime2022.csv")
+campus_crime_2023 <- read_csv("oncampuscrime2023.csv")
+campus_crime_2024 <- read_csv("oncampuscrime2024.csv")
+
+campus_crime_combined <- bind_rows(list(campus_crime_2019, campus_crime_2020, campus_crime_2021, campus_crime_2022, campus_crime_2023, campus_crime_2024))
+```
