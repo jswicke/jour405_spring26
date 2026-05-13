@@ -13,14 +13,6 @@ library(tidyverse)
 library(lubridate)
 ```
 
-Tests I can run:
-
-- Percent change of burglaries for each year
-- Rate per 10,000 people 
-- IQR of burglaries
-- Comparing CIs for each college's burglary rates
-- Calculating effect size using cohen's D
-
 ***Data exploration: My data covers a wide variety of campus crime from 2016-2023. While the original files had every college in the United States represented, I instead filtered it down to 11 colleges --- the University of Maryland and the ten schools with the largest student bodies in the B1G. Since I do think it would be too broad to just look at general crime trends, I decided to land on burglary, since it's a highly-represented stat across all files. While the data is all-encompassing and easily accessible, the one limitation is a lack of precision in the data. While each year is handily represented, the exact months are not. While it's not impossible to visualize, the data will unfortunately be less detailed in something like a line graph. I initially feared that having 5 separate datasets would make it difficult to analyze the data, I binded the rows together, and thankfully all the data remained. What was nice too was that certain years overlapped in individual datasets, which is now avoided thanks to the combined dataset, which makes everything a little less tricky. For my sakes, anything labeled "BURGLA" will be mainly what I'm looking at. To make my life a little easier, I may make a condensed dataset of just BURGLA and university values. One final issue that may come up is that even in only one campus, many colleges are subdivided by region. I may have to use summarize and sum to get around this (possibly mutate, though that may cause more confusion)***
 
 ```{r}
@@ -32,4 +24,45 @@ campus_crime_2023 <- read_csv("oncampuscrime2023.csv")
 campus_crime_2024 <- read_csv("oncampuscrime2024.csv")
 
 campus_crime_combined <- bind_rows(list(campus_crime_2019, campus_crime_2020, campus_crime_2021, campus_crime_2022, campus_crime_2023, campus_crime_2024))
+```
+***Data cleaning***
+
+Next, I will isolate burglary and combine campus, so it will all show up as one year:
+
+```{r}
+campus_crime_burglary <- campus_crime_combined |>
+  select(INSTNM, BRANCH, Total, starts_with("BURGLA")) |>
+  pivot_longer(cols = starts_with("BURGLA"), names_to = "year", values_to = "burglary_count") |>
+  filter(!is.na(burglary_count)) |>
+  mutate(year = as.numeric(str_remove(year, "BURGLA")) + 2000) |>
+  group_by(INSTNM, year) |>
+  summarize(burglary_count = sum(burglary_count), total_students = max(Total)) |>
+  distinct() |>
+  ungroup()
+```
+
+***Rates***
+
+Now, I will determine the rate per 1000 students for each campus and each year. 
+
+```{r}
+campus_crime_burglary <- campus_crime_burglary |>
+  mutate(rate_per_1000 = (burglary_count/total_students) * 1000)
+```
+
+Looking at this, my eye immediately gravitates towards the University of Washington's burglary rate in 2020, especially because it's so much higher than any other rate in 2020. The next highest that year hovers around 1.75 per 1000, while UW's is over 4 per 1000. Looking at the University of Maryland's specifically, I initially believe it will show a signifcant amount of decrease in burglaries. It has been consistently going down since 2019, and while I don't believe yet that it will be the lowest, I think it is in a substantially better place compared to other colleges based on initial findings.
+
+***Percent changes***
+
+With that being said, I will now determine each college's percent changes. I decided to split this into 2 categories: percent change over all years covered and percent change post-pandemic. I've determined "post-pandemic" as 2022 onwards. I was originally also going to do a percent change over the most recent year of the data, but since the data ends at 2023, I merged the two categories. 
+
+Firstly, I'll pivot wide to get all the years separated
+
+```{r}
+burglary_wide <- campus_crime_burglary |>
+   pivot_wider(
+    names_from = year,
+    values_from = burglary_count,
+    values_fill = 0
+  )
 ```
