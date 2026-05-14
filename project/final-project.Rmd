@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
 library(dplyr)
+library(purrr)
+library(corrplot)
 ```
 
 ***Data exploration: My data covers a wide variety of campus crime from 2016-2023. While the original files had every college in the United States represented, I instead filtered it down to 11 colleges --- the University of Maryland and the ten schools with the largest student bodies in the B1G. Since I do think it would be too broad to just look at general crime trends, I decided to land on burglary, since it's a highly-represented stat across all files. While the data is all-encompassing and easily accessible, the one limitation is a lack of precision in the data. While each year is handily represented, the exact months are not. While it's not impossible to visualize, the data will unfortunately be less detailed in something like a line graph. I initially feared that having 5 separate datasets would make it difficult to analyze the data, I binded the rows together, and thankfully all the data remained. What was nice too was that certain years overlapped in individual datasets, which is now avoided thanks to the combined dataset, which makes everything a little less tricky. For my sakes, anything labeled "BURGLA" will be mainly what I'm looking at. To make my life a little easier, I may make a condensed dataset of just BURGLA and university values. One final issue that may come up is that even in only one campus, many colleges are subdivided by region. I may have to use summarize and sum to get around this (possibly mutate, though that may cause more confusion)***
@@ -226,8 +228,150 @@ all_crimes <- bind_rows(
   ) |>
   distinct(INSTNM, year, .keep_all = TRUE)
 
-# Regression: do burglaries predict robberies?
+# Regression: do burglaries predict aggravted ass?
 model <- lm(robberies ~ burglaries, data = all_crimes)
 summary(model)
 ```
-A couple things imediately stand out to me. For one, there is a positive coefficient of 3, which tells me the regression model is moving significantly. The p-value is also in scientific notation, which tells me that the results are definitely statistically significant. While this definitely leads me to believe that the model is showing a significant positive correlation between burglaries and robberies, one giant red flag is an adjusted R-squared of 
+A couple things imediately stand out to me. For one, there is a positive coefficient of 3, which tells me the regression model is moving significantly. The p-value is also in scientific notation, which tells me that the results are definitely statistically significant. While this definitely leads me to believe that the model is showing a significant positive correlation between burglaries and robberies, one giant red flag is an adjusted R-squared of 0.26, which means that about a quarter of the dataset is represented in this model. Based on this, I think it's safe to say that there is a positive correlation, but the model may be unreliable, as a large chunk of data is unaccounted for. 
+
+Nevertheless, let's visualize it: 
+
+```{r}
+all_crimes |>
+  ggplot(aes(x = burglaries, y = robberies)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(x = "# of burglaries", y = "# of robberies",
+       title = "Do burglaries influence robberies at Big 10 colleges?")
+```
+Visually, you can see a positive correlation, though the data is slightly more scattered than the results from the model would suggest. Once again, this is where having a higher adjusted R-squared would benefit the data, as there is simply more to draw off of. 
+For fun, let's see if we can create a model with a higher adjusted R-squared value. I have two ideas in mind:
+
+First, let's try aggravated assaults:
+
+```{r}
+pivot_crimes <- function(df) {
+  burgla <- df |>
+    select(INSTNM, BRANCH, Total, starts_with("BURGLA")) |>
+    pivot_longer(cols = starts_with("BURGLA"), names_to = "year", values_to = "burglaries") |>
+    mutate(year = as.numeric(str_replace(year, "BURGLA", "")) + 2000)
+
+  agg_a <- df |>
+    select(INSTNM, BRANCH, starts_with("AGG_A")) |>
+    pivot_longer(cols = starts_with("AGG_A"), names_to = "year", values_to = "agg_assault") |>
+    mutate(year = as.numeric(str_replace(year, "AGG_A", "")) + 2000)
+
+  inner_join(burgla, agg_a, by = c("INSTNM", "BRANCH", "year"))
+}
+
+all_crimes_2 <- bind_rows(
+  pivot_crimes(campus_crime_2019),
+  pivot_crimes(campus_crime_2020),
+  pivot_crimes(campus_crime_2021),
+  pivot_crimes(campus_crime_2022),
+  pivot_crimes(campus_crime_2023),
+  pivot_crimes(campus_crime_2024)
+) |>
+  group_by(INSTNM, year) |>
+  summarize(
+    burglaries = sum(burglaries, na.rm = TRUE),
+    agg_assault = sum(agg_assault, na.rm = TRUE),
+    enrollment = max(Total, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  distinct(INSTNM, year, .keep_all = TRUE)
+
+model <- lm(agg_assault ~ burglaries, data = all_crimes_2)
+summary(model)
+```
+And to visualize it:
+
+```{r}
+all_crimes_2 |>
+  ggplot(aes(x = burglaries, y = agg_assault)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(x = "# of aggravated assaults", y = "# of robberies",
+       title = "Do aggravated assaults? influence robberies at Big 10 colleges?")
+```
+Here, there is a much clearer positive correlation. This is supported by a miniscule p-value and a very strong coefficient. However, what concerns me is an adjusted R-squared value of 0.16, which means that most of the data is unaccounted for in this model. While the results are clear with this model, I unfortunately would not call it a reliable model. 
+
+First, let's add some more crime types in our dataset. I'll go with VEHIC, ROBBE, AGGRE, and BURGLA. 
+
+```{r}
+pivot_crimes <- function(df) {
+  burgla <- df |>
+    select(INSTNM, BRANCH, Total, starts_with("BURGLA")) |>
+    pivot_longer(cols = starts_with("BURGLA"), names_to = "year", values_to = "burglaries") |>
+    mutate(year = as.numeric(str_replace(year, "BURGLA", "")) + 2000)
+
+  agg_a <- df |>
+    select(INSTNM, BRANCH, starts_with("AGG_A")) |>
+    pivot_longer(cols = starts_with("AGG_A"), names_to = "year", values_to = "agg_assault") |>
+    mutate(year = as.numeric(str_replace(year, "AGG_A", "")) + 2000)
+  
+  robs <- df |>
+    select(INSTNM, BRANCH, starts_with("ROBBE")) |>
+    pivot_longer(cols = starts_with("ROBBE"), names_to = "year", values_to = "robberies") |>
+    mutate(year = as.numeric(str_replace(year, "ROBBE", "")) + 2000)
+  
+  vehic <- df |>
+    select(INSTNM, BRANCH, starts_with("VEHIC")) |>
+    pivot_longer(cols = starts_with("VEHIC"), names_to = "year", values_to = "vehicle_thefts") |>
+    mutate(year = as.numeric(str_replace(year, "VEHIC", "")) + 2000)
+
+#This I had to look up how to do (I did not use AI):
+  list = list(burgla, agg_a, robs, vehic)
+  
+  crimes <- list |>
+     reduce(inner_join, by = c("INSTNM", "BRANCH", "year"))
+}
+
+all_crimes_3 <- bind_rows(
+  pivot_crimes(campus_crime_2019),
+  pivot_crimes(campus_crime_2020),
+  pivot_crimes(campus_crime_2021),
+  pivot_crimes(campus_crime_2022),
+  pivot_crimes(campus_crime_2023),
+  pivot_crimes(campus_crime_2024)
+) |>
+  group_by(INSTNM, year) |>
+  summarize(
+    burglaries = sum(burglaries, na.rm = TRUE),
+    agg_assault = sum(agg_assault, na.rm = TRUE),
+    robberies = sum(robberies, na.rm = TRUE),
+    vehicle_thefts = sum(vehicle_thefts, na.rm = TRUE),
+    enrollment = max(Total, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  distinct(INSTNM, year, .keep_all = TRUE)
+
+model <- lm(burglaries ~ agg_assault + vehicle_thefts + enrollment + robberies, data = all_crimes_3)
+summary(model)
+```
+Already, the p-value tells us that this will be statistically significant. The adjust R-squared means about 32% of the dataset is encompassed, which is higher than any other results I was able to get before. Given how large the crime dataset is, I imagine this makes some amount of sense. 
+
+Now, to create the multiple regression model:
+```{r}
+selected_vars <- all_crimes_3 |>  select(robberies, enrollment, agg_assault, burglaries, vehicle_thefts)
+cor(selected_vars)
+```
+Now to visualize it:
+
+```{r}
+corr_matrix <- cor(selected_vars)
+corrplot(corr_matrix, method = "circle")
+```
+From this, we can glean that burglaries and robberies have a significant positive correlaion. Out of all the crimes listed in the dataset, these two easily have the strongest connection. Aggravated assaults and burglaries also have a decently strong correlation, as does aggravated assault and robberies. Interestingly, there's a negative correlation between vehicle thefts and enrollments, though that is a rather weak correlation. Overall, nothing here sounds too surprising. While there are some correlations between crimes, the two explanations are that the crimes either strongly relate (i.e., a burglary can easily turn into a robbery if the burglar confronts the homeowner), or can just be explained by campuses having high crime rates due to the surrounding area. Nothing seems like a major breakthrough when looking at this data. 
+
+***Reporting plan***
+
+Sometimes when looking at datasets, there just isn't an interesting story to be found. Unfortunately, I do think this is the case here. I looked to see if UMD had any abnormal burglary patterns compared to other B1G colleges, and they were relatively insignificant. I looked to see if there were any changes in burglary trends post-pandemic, and the changes were insignificant. I looked to see if burglary correlates to any other crime, and the results did not produce anything particularly newsworthy. However, I think I have two leads I could potentially follow. 
+
+While post-covid burglary trends did not garner a statistical significance, I wonder if that's an interesting story to follow. After the pandemic, there had to have been some plan in place to prevent crime as it inevitably rises. What have B1G colleges been saying about their crime rates? Are they satisfied with its progress, or do they want to continue improvements? Do the statements from the universities contradict the (lack of) statistical significance in the data? I think there could be an interesting story, especially if the campus police go against what the data says. 
+
+For this, I would need to contact campus police officers, maybe a police chief, a statement or two from some B1G university presidents. Perhaps some interviews from students and local residents can add some perspective. 
+
+Building off this a little, I'm also interested in the University of Washington's burglary rates pre-and post-pandemic. They are the only university to increase in burglaries following the pandemic, and had the highest change from average crimes during the pandemic. I think there's potentially an interesting story here. Why do they have the most amount of burglaries despite only being the 4th most-populous campus? Is local law enforcement at all concerned? I think I would talk to all the same sources I would for the first pitch idea. I think even a combination of the two can work to some capacity. 
+
+Of course, the one caveat for both of these stories is that burglary is only one subsect of crime, and does not solely contribute to a campus's overall safety. Regardless, I think it could play an interesting part in a larger conversation about safety at B1G schools. 
