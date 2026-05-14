@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(lubridate)
+library(dplyr)
 ```
 
 ***Data exploration: My data covers a wide variety of campus crime from 2016-2023. While the original files had every college in the United States represented, I instead filtered it down to 11 colleges --- the University of Maryland and the ten schools with the largest student bodies in the B1G. Since I do think it would be too broad to just look at general crime trends, I decided to land on burglary, since it's a highly-represented stat across all files. While the data is all-encompassing and easily accessible, the one limitation is a lack of precision in the data. While each year is handily represented, the exact months are not. While it's not impossible to visualize, the data will unfortunately be less detailed in something like a line graph. I initially feared that having 5 separate datasets would make it difficult to analyze the data, I binded the rows together, and thankfully all the data remained. What was nice too was that certain years overlapped in individual datasets, which is now avoided thanks to the combined dataset, which makes everything a little less tricky. For my sakes, anything labeled "BURGLA" will be mainly what I'm looking at. To make my life a little easier, I may make a condensed dataset of just BURGLA and university values. One final issue that may come up is that even in only one campus, many colleges are subdivided by region. I may have to use summarize and sum to get around this (possibly mutate, though that may cause more confusion)***
@@ -39,6 +40,25 @@ campus_crime_burglary <- campus_crime_combined |>
   summarize(burglary_count = sum(burglary_count), total_students = max(Total)) |>
   distinct() |>
   ungroup()
+
+##Illinois and Penn State decided to be annoying and duplicate their data. This is to fix it:
+
+campus_crime_burglary_clean <- campus_crime_burglary |>
+  mutate(institution_name = case_when(
+    INSTNM == "Pennsylvania State University-Main Campus" ~ "Pennsylvania State University",
+    INSTNM == "The Pennsylvania State University" ~ "Pennsylvania State University",
+    INSTNM == "University of Illinois at Urbana-Champaign" ~ "University of Illinois",
+    INSTNM == "University of Illinois Urbana-Champaign" ~ "University of Illinois",
+    INSTNM == "Michigan State University" ~ "Michigan State University",
+    INSTNM == "Ohio State University-Main Campus" ~ "Ohio State University",
+    INSTNM == "Purdue University-Main Campus" ~ "Purdue University",
+    INSTNM == "Rutgers University-New Brunswick" ~ "Rutgers University",
+    INSTNM == "University of Maryland-College Park" ~ "University of Maryland",
+    INSTNM == "University of Michigan-Ann Arbor" ~ "University of Michigan",
+    INSTNM == "University of Minnesota-Twin Cities" ~ "University of Minnesota",
+    INSTNM == "University of Washington-Seattle Campus" ~ "University of Washington",
+    INSTNM == "University of Wisconsin-Madison" ~ "University of Wisconsin"
+  ))
 ```
 
 ***Rates***
@@ -46,7 +66,7 @@ campus_crime_burglary <- campus_crime_combined |>
 Now, I will determine the rate per 1000 students for each campus and each year. 
 
 ```{r}
-campus_crime_burglary <- campus_crime_burglary |>
+campus_crime_burglary_clean |>
   mutate(rate_per_1000 = (burglary_count/total_students) * 1000)
 ```
 
@@ -54,15 +74,160 @@ Looking at this, my eye immediately gravitates towards the University of Washing
 
 ***Percent changes***
 
-With that being said, I will now determine each college's percent changes. I decided to split this into 2 categories: percent change over all years covered and percent change post-pandemic. I've determined "post-pandemic" as 2022 onwards. I was originally also going to do a percent change over the most recent year of the data, but since the data ends at 2023, I merged the two categories. 
+With that being said, I will now determine each college's percent changes based on their average number of crimes committed per year. I decided to split this into 2 categories: percent change over all years covered and percent change post-pandemic. I've determined "post-pandemic" as 2022 onwards. I was originally also going to do a percent change over the most recent year of the data, but since the data ends at 2023, I merged the two categories. 
 
-Firstly, I'll pivot wide to get all the years separated
+First, I'll pivot wide to create a column for every year:
 
 ```{r}
-burglary_wide <- campus_crime_burglary |>
+burglary_wide <- campus_crime_burglary_clean |>
+  select(-total_students, -INSTNM,) |>
    pivot_wider(
     names_from = year,
     values_from = burglary_count,
+    values_fn = sum,
     values_fill = 0
   )
 ```
+
+Then, I will create a column determining the total and average for every university:
+
+```{r}
+burglary_wide <- burglary_wide |>
+  group_by(institution_name) |>
+  mutate(total_burglaries = sum(`2016` + `2017` + `2018` + `2019` + `2020` + `2021` + `2022` + `2023`))
+
+  
+burglary_averages <- burglary_wide |>
+  mutate(average_burglaries = total_burglaries/8)
+  
+```
+
+Now, I will figure out each appropriate percent change. I decided to go with 2017 (pre-covid), 2020 (amid covid) and 2023 (post-covid): 
+
+```{r}
+burglary_changes <- burglary_averages |>
+  mutate(change_2023 = (`2023` - average_burglaries) / average_burglaries * 100) |>
+  mutate(change_2020 = (`2020` - average_burglaries) / average_burglaries * 100) |>
+  mutate(change_2017 = (`2017` - average_burglaries) / average_burglaries * 100)
+  
+```
+
+Based on this, Maryland's decrease in crime is somewhere in the middle compared to all other colleges. It currently sits at around 59%, the fifth-highest decrease since 2023. Interestingly, it did have a spike in burglaries around the start of COVID compared to the average, and had the 3rd highest percent increase across all 11 schools. While we will have to find if this decrease is statistically significant, right now it looks like big 10 schools in general are doing better with preventing burglaries, as all 11 decreased from the average in 2023. 
+
+
+Now, we will perform a t-test to determine if there was a significant difference in pre-covid and post-covid burglary rates. 
+
+Below is the code that I used to conduct the t-test.
+
+
+```{r}
+# Helper: pivot one CSV's BURGLA columns to long format
+pivot_burgla <- function(df) {
+  df |>
+    select(INSTNM, BRANCH, Total, starts_with("BURGLA")) |>
+    pivot_longer(cols = starts_with("BURGLA"),
+                 names_to = "year",
+                 values_to = "burglaries") |>
+    mutate(year = as.numeric(str_replace(year, "BURGLA", "")) + 2000) |>
+    #I added this to fix duplicates in Penn State and Illinois. I don't mean to brag, but I totally mean to brag.
+     mutate(institution_name = case_when(
+    INSTNM == "Pennsylvania State University-Main Campus" ~ "Pennsylvania State University",
+    INSTNM == "The Pennsylvania State University" ~ "Pennsylvania State University",
+    INSTNM == "University of Illinois at Urbana-Champaign" ~ "University of Illinois",
+    INSTNM == "University of Illinois Urbana-Champaign" ~ "University of Illinois",
+    INSTNM == "Michigan State University" ~ "Michigan State University",
+    INSTNM == "Ohio State University-Main Campus" ~ "Ohio State University",
+    INSTNM == "Purdue University-Main Campus" ~ "Purdue University",
+    INSTNM == "Rutgers University-New Brunswick" ~ "Rutgers University",
+    INSTNM == "University of Maryland-College Park" ~ "University of Maryland",
+    INSTNM == "University of Michigan-Ann Arbor" ~ "University of Michigan",
+    INSTNM == "University of Minnesota-Twin Cities" ~ "University of Minnesota",
+    INSTNM == "University of Washington-Seattle Campus" ~ "University of Washington",
+    INSTNM == "University of Wisconsin-Madison" ~ "University of Wisconsin"
+  ))
+    
+}
+# Pivot each file and combine
+all_burglaries <- bind_rows(
+  pivot_burgla(campus_crime_2019),
+  pivot_burgla(campus_crime_2020),
+  pivot_burgla(campus_crime_2021),
+  pivot_burgla(campus_crime_2022),
+  pivot_burgla(campus_crime_2023),
+  pivot_burgla(campus_crime_2024)
+) |>
+  # Aggregate sub-campuses (e.g., UMD Main + Shady Grove)
+  group_by(institution_name, year) |>
+  summarize(
+    burglaries = sum(burglaries, na.rm = TRUE),
+    enrollment = max(Total, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  # Remove duplicate year observations from overlapping CSVs
+  distinct(institution_name, year, .keep_all = TRUE)
+
+# Add pre/post COVID label (2016-2019 = pre, 2020-2023 = post)
+all_burglaries <- all_burglaries |>
+  mutate(period = if_else(year <= 2019, "pre_covid", "post_covid"))
+
+# Compute mean burglary rate per school per period (for paired t-test)
+school_period_means <- all_burglaries |>
+  group_by(institution_name, period) |>
+  summarize(mean_burglaries = mean(burglaries, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = period, values_from = mean_burglaries)
+
+# Paired t-test: each school is a pair (pre vs post)
+t_test_result <- t.test(school_period_means$pre_covid, school_period_means$post_covid, paired = TRUE)
+```
+Now, let's interpret the results of the t-test: 
+
+```{r}
+p_value <- t_test_result$p.value
+```
+
+Right here, we can see that the p-value comes out to about .063. For our purposes, this would mean that we cannot reject the null hypothesis, which is that there is not a statistically significant change in average pre- and post-covid burglary rates. While the p-value does inch close to the 0.05 threshold, even then, there is no guarantee that a statistically significant change equates to a change that feels significant to an observer. Even if we did deem it statistically significant, the results don't necessarily reflect that. For example, Maryland's mean rate dropped merely by 3 burglaries after COVID, which doesn't feel that significant. This is especially reflected in the confidence interval. Ranging from -1 to 48, it includes zero, which automatically deems it not statistically significant, as the "true" mean difference could be nothing. 
+
+With all that said, there is no significant difference in pre- and post-covid average burglaries across any of the B1G schools listed. 
+
+Next, let's see if higher burglary rates influence higher robbery rates. 
+
+To do this, we'll create a linear regression model:
+
+```{r}
+# Modify the pivot helper to grab both crime types
+pivot_crimes <- function(df) {
+  burgla <- df |>
+    select(INSTNM, BRANCH, Total, starts_with("BURGLA")) |>
+    pivot_longer(cols = starts_with("BURGLA"), names_to = "year", values_to = "burglaries") |>
+    mutate(year = as.numeric(str_replace(year, "BURGLA", "")) + 2000)
+
+  robs <- df |>
+    select(INSTNM, BRANCH, starts_with("ROBBE")) |>
+    pivot_longer(cols = starts_with("ROBBE"), names_to = "year", values_to = "robberies") |>
+    mutate(year = as.numeric(str_replace(year, "ROBBE", "")) + 2000)
+
+  inner_join(burgla, robs, by = c("INSTNM", "BRANCH", "year"))
+}
+
+all_crimes <- bind_rows(
+  pivot_crimes(campus_crime_2019),
+  pivot_crimes(campus_crime_2020),
+  pivot_crimes(campus_crime_2021),
+  pivot_crimes(campus_crime_2022),
+  pivot_crimes(campus_crime_2023),
+  pivot_crimes(campus_crime_2024)
+) |>
+  group_by(INSTNM, year) |>
+  summarize(
+    burglaries = sum(burglaries, na.rm = TRUE),
+    robberies = sum(robberies, na.rm = TRUE),
+    enrollment = max(Total, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  distinct(INSTNM, year, .keep_all = TRUE)
+
+# Regression: do burglaries predict robberies?
+model <- lm(robberies ~ burglaries, data = all_crimes)
+summary(model)
+```
+A couple things imediately stand out to me. For one, there is a positive coefficient of 3, which tells me the regression model is moving significantly. The p-value is also in scientific notation, which tells me that the results are definitely statistically significant. While this definitely leads me to believe that the model is showing a significant positive correlation between burglaries and robberies, one giant red flag is an adjusted R-squared of 
